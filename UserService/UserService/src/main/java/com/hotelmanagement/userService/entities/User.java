@@ -1,7 +1,11 @@
 package com.hotelmanagement.userService.entities;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -20,4 +24,7 @@ public class User {
 	private String name;
 	private String email;
 	private String about;
+	
+	@Transient
+	private List<Ratings> ratings = new ArrayList<>();
 }
