@@ -1,15 +1,19 @@
 package com.hotelmanagement.userService.serviceImplementations;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import com.hotelmanagement.userService.entities.Hotel;
 import com.hotelmanagement.userService.entities.Ratings;
 import com.hotelmanagement.userService.entities.User;
 import com.hotelmanagement.userService.exceptions.ResourceNotFoundException;
@@ -45,10 +49,26 @@ public class UserServiceImplementation implements UserService {
 		
 		// fetch rating of the above user from rating service
 		// http://localhost:8813/rating/user/f87a7c6a-98fc-44d9-b268-fbba9f61836e
-		ArrayList<Ratings> ratingsOfUser = restTemplate.getForObject("http://localhost:8813/rating/user/f87a7c6a-98fc-44d9-b268-fbba9f61836e", ArrayList.class);
-		logger.info("{} ", ratingsOfUser);
 		
-		existingUser.setRatings(ratingsOfUser);
+		Ratings[] ratingsOfUser = restTemplate.getForObject("http://localhost:8813/rating/user/"+existingUser.getUserId(), Ratings[].class);
+		logger.info("{} ", ratingsOfUser);
+		List<Ratings> ratings = Arrays.stream(ratingsOfUser).toList();
+		
+		
+		List<Ratings> ratingList = ratings.stream().map(rating -> {
+			// api call to hotel service to get the hotel
+			// http://localhost:8812/hotel/bf65a164-5fa3-4923-ad13-64a40ef11a68
+			ResponseEntity<Hotel> forEntity = restTemplate.getForEntity("http://localhost:8812/hotel/"+rating.getHotelId(), Hotel.class);
+			Hotel hotel = forEntity.getBody();
+			logger.info("response status code: {} ",forEntity.getStatusCode());
+			// set the hotel to rating
+			rating.setHotel(hotel);
+			
+			// return the rating
+			return rating;
+		}).collect(Collectors.toList());
+
+		existingUser.setRatings(ratingList);
 		
 		return existingUser;
 	}
