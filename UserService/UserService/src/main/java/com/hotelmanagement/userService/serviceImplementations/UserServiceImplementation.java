@@ -1,11 +1,16 @@
 package com.hotelmanagement.userService.serviceImplementations;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
+import com.hotelmanagement.userService.entities.Ratings;
 import com.hotelmanagement.userService.entities.User;
 import com.hotelmanagement.userService.exceptions.ResourceNotFoundException;
 import com.hotelmanagement.userService.repositories.UserRepository;
@@ -16,6 +21,11 @@ public class UserServiceImplementation implements UserService {
 
 	@Autowired
 	private UserRepository userRepository;
+	
+	@Autowired
+	private RestTemplate restTemplate;
+	
+	private Logger logger = LoggerFactory.getLogger(UserServiceImplementation.class);
 	
 	@Override
 	public User saveUser(User user) {
@@ -31,7 +41,16 @@ public class UserServiceImplementation implements UserService {
 
 	@Override
 	public User getUser(String userId) {
-		return userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found on server with id: "+userId));
+		User existingUser = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found on server with id: "+userId));
+		
+		// fetch rating of the above user from rating service
+		// http://localhost:8813/rating/user/f87a7c6a-98fc-44d9-b268-fbba9f61836e
+		ArrayList<Ratings> ratingsOfUser = restTemplate.getForObject("http://localhost:8813/rating/user/f87a7c6a-98fc-44d9-b268-fbba9f61836e", ArrayList.class);
+		logger.info("{} ", ratingsOfUser);
+		
+		existingUser.setRatings(ratingsOfUser);
+		
+		return existingUser;
 	}
 
 }
