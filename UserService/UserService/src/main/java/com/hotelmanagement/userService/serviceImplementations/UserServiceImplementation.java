@@ -17,6 +17,7 @@ import com.hotelmanagement.userService.entities.Hotel;
 import com.hotelmanagement.userService.entities.Ratings;
 import com.hotelmanagement.userService.entities.User;
 import com.hotelmanagement.userService.exceptions.ResourceNotFoundException;
+import com.hotelmanagement.userService.external.services.HotelService;
 import com.hotelmanagement.userService.repositories.UserRepository;
 import com.hotelmanagement.userService.services.UserService;
 
@@ -28,6 +29,9 @@ public class UserServiceImplementation implements UserService {
 	
 	@Autowired
 	private RestTemplate restTemplate;
+	
+	@Autowired
+	private HotelService hotelService;
 	
 	private Logger logger = LoggerFactory.getLogger(UserServiceImplementation.class);
 	
@@ -50,7 +54,7 @@ public class UserServiceImplementation implements UserService {
 		// fetch rating of the above user from rating service
 		// http://localhost:8813/rating/user/f87a7c6a-98fc-44d9-b268-fbba9f61836e
 		
-		Ratings[] ratingsOfUser = restTemplate.getForObject("http://localhost:8813/rating/user/"+existingUser.getUserId(), Ratings[].class);
+		Ratings[] ratingsOfUser = restTemplate.getForObject("http://RATING-SERVICE/rating/user/"+existingUser.getUserId(), Ratings[].class);
 		logger.info("{} ", ratingsOfUser);
 		List<Ratings> ratings = Arrays.stream(ratingsOfUser).toList();
 		
@@ -58,9 +62,9 @@ public class UserServiceImplementation implements UserService {
 		List<Ratings> ratingList = ratings.stream().map(rating -> {
 			// api call to hotel service to get the hotel
 			// http://localhost:8812/hotel/bf65a164-5fa3-4923-ad13-64a40ef11a68
-			ResponseEntity<Hotel> forEntity = restTemplate.getForEntity("http://localhost:8812/hotel/"+rating.getHotelId(), Hotel.class);
-			Hotel hotel = forEntity.getBody();
-			logger.info("response status code: {} ",forEntity.getStatusCode());
+			// ResponseEntity<Hotel> forEntity = restTemplate.getForEntity("http://HOTEL-SERVICE/hotel/"+rating.getHotelId(), Hotel.class);
+			Hotel hotel = hotelService.getHotel(rating.getHotelId());
+			// logger.info("response status code: {} ",forEntity.getStatusCode());
 			// set the hotel to rating
 			rating.setHotel(hotel);
 			
