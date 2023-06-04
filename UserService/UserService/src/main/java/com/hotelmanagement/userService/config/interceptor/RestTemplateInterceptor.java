@@ -2,6 +2,7 @@ package com.hotelmanagement.userService.config.interceptor;
 
 import java.io.IOException;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
@@ -11,10 +12,11 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 
 public class RestTemplateInterceptor implements ClientHttpRequestInterceptor {
 
+	@Autowired
 	private OAuth2AuthorizedClientManager manager;
 
 	public RestTemplateInterceptor(OAuth2AuthorizedClientManager manager) {
-		super();
+		// super();
 		this.manager = manager;
 	}
 
